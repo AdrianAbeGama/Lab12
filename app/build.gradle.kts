@@ -51,13 +51,17 @@ android {
 }
 
 dependencies {
+    implementation(libs.play.services.location)
     val mapsComposeVersion = "4.4.1"
     // Google Maps Compose
-    implementation("com.google.maps.android:maps-compose:$mapsComposeVersion")
+    implementation(libs.maps.compose.v441)
     // Utilidades de Google Maps para Jetpack Compose
-    implementation("com.google.maps.android:maps-compose-utils:$mapsComposeVersion")
+    implementation(libs.maps.compose.utils)
     // Widgets de Google Maps Compose
-    implementation("com.google.maps.android:maps-compose-widgets:$mapsComposeVersion"    )
+    implementation(libs.maps.compose.widgets)
+
+    implementation(libs.play.services.maps)
+    implementation(libs.android.maps.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -77,16 +81,8 @@ dependencies {
 }
 
 secrets {
-    // Optionally specify a different file name containing your secrets.
-    // The plugin defaults to "local.properties"
-    propertiesFileName = "secrets.properties"
-
-    // A properties file containing default secret values. This file can be
-    // checked in version control.
-    defaultPropertiesFileName = "local.defaults.properties"
-
-    // Configure which keys should be ignored by the plugin by providing regular expressions.
-    // "sdk.dir" is ignored by default.
-    ignoreList.add("keyToIgnore") // Ignore the key "keyToIgnore"
-    ignoreList.add("sdk.*")       // Ignore all keys matching the regexp "sdk.*"
+    propertiesFileName = "secrets.properties" // Opcional
+    defaultPropertiesFileName = "local.defaults.properties" // Opcional
+    ignoreList.add("keyToIgnore") // Opcional
+    ignoreList.add("sdk.*") // Opcional
 }

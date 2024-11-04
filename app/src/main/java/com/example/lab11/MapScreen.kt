@@ -1,20 +1,34 @@
 package com.example.lab11
-
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun MapScreen() {
@@ -62,62 +76,129 @@ fun MapScreen() {
         LatLng(-16.430000, -71.560000)
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Añadir GoogleMap al layout
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState
-        ) {
-            // Añadir marcador en Arequipa, Perú
-            Marker(
-                state = rememberMarkerState(position = arequipaLocation),
-                icon = BitmapDescriptorFactory.fromResource(R.drawable.icon), // Icono para Arequipa
-                title = "Arequipa, Perú"
-            )
-            // Añadir marcadores personalizados para las ubicaciones
-            locations.forEachIndexed { index, location ->
-                Marker(
-                    state = rememberMarkerState(position = location),
-                    icon = BitmapDescriptorFactory.fromResource(R.drawable.ubi2), // Icono personalizado para cada ubicación
-                    title = locationNames[index],
-                    snippet = "Punto de interés en ${locationNames[index]}"
-                )
+    // Variables para el tipo de mapa y ubicación actual
+    var mapType by remember { mutableStateOf(MapType.NORMAL) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    // Función para obtener la ubicación actual
+    fun getCurrentLocation(context: Context) {
+        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(context as Activity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1)
+            return
+        }
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            location?.let {
+                currentLocation = LatLng(it.latitude, it.longitude)
+                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(currentLocation!!, 12f))
             }
-
-            // Dibujar polígonos
-            Polygon(
-                points = mallAventuraPolygon,
-                strokeColor = Color.Black,
-                fillColor = Color.Red.copy(alpha = 0.3f),
-                strokeWidth = 5f
-            )
-            Polygon(
-                points = parqueLambramaniPolygon,
-                strokeColor = Color.Black,
-                fillColor = Color.Red.copy(alpha = 0.3f),
-                strokeWidth = 5f
-            )
-            Polygon(
-                points = plazaDeArmasPolygon,
-                strokeColor = Color.Black,
-                fillColor = Color.Red.copy(alpha = 0.3f),
-                strokeWidth = 5f
-            )
-
-            // Dibujar una polilínea
-            Polyline(
-                points = examplePolyline,
-                color = Color.Green,
-                width = 5f
-            )
         }
     }
 
-    // Controlar el movimiento de la cámara programáticamente
-    LaunchedEffect(Unit) {
-        cameraPositionState.animate(
-            update = CameraUpdateFactory.newLatLngZoom(LatLng(-16.2520984, -71.6836503), 12f), // Mover a Yura
-            durationMs = 3000
-        )
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Botones para cambiar el tipo de mapa
+        MapTypeSelection(mapType = mapType) { selectedMapType ->
+            mapType = selectedMapType
+        }
+
+        // Botón para obtener la ubicación actual
+        val context = LocalContext.current
+        Button(onClick = { getCurrentLocation(context) }) {
+            Text("Obtener ubicación actual")
+        }
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            GoogleMap(
+                modifier = Modifier.fillMaxSize(),
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(mapType = mapType)
+            ) {
+                // Añadir marcador en Arequipa, Perú
+                Marker(
+                    state = rememberMarkerState(position = arequipaLocation),
+                    icon = BitmapDescriptorFactory.fromResource(R.drawable.icon), // Cambia este icono según sea necesario
+                    title = "Arequipa, Perú"
+                )
+
+                // Añadir marcadores personalizados para las ubicaciones
+                locations.forEachIndexed { index, location ->
+                    Marker(
+                        state = rememberMarkerState(position = location),
+                        icon = BitmapDescriptorFactory.fromResource(R.drawable.ubi2), // Cambia este icono según sea necesario
+                        title = locationNames[index],
+                        snippet = "Punto de interés en ${locationNames[index]}"
+                    )
+                }
+
+                // Dibujar polígonos
+                Polygon(
+                    points = mallAventuraPolygon,
+                    strokeColor = Color.Black,
+                    fillColor = Color.Red.copy(alpha = 0.3f),
+                    strokeWidth = 5f
+                )
+                Polygon(
+                    points = parqueLambramaniPolygon,
+                    strokeColor = Color.Black,
+                    fillColor = Color.Red.copy(alpha = 0.3f),
+                    strokeWidth = 5f
+                )
+                Polygon(
+                    points = plazaDeArmasPolygon,
+                    strokeColor = Color.Black,
+                    fillColor = Color.Red.copy(alpha = 0.3f),
+                    strokeWidth = 5f
+                )
+
+                // Dibujar una polilínea
+                Polyline(
+                    points = examplePolyline,
+                    color = Color.Green,
+                    width = 5f
+                )
+
+                // Marcador para la ubicación actual
+                currentLocation?.let { loc ->
+                    Marker(
+                        state = rememberMarkerState(position = loc),
+                        title = "Ubicación Actual"
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun MapTypeSelection(mapType: MapType, onMapTypeSelected: (MapType) -> Unit) {
+    Column {
+        Text("Selecciona el tipo de mapa:")
+        Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+            Button(
+                onClick = { onMapTypeSelected(MapType.NORMAL) },
+                enabled = mapType != MapType.NORMAL
+            ) {
+                Text("Normal")
+            }
+            Button(
+                onClick = { onMapTypeSelected(MapType.SATELLITE) },
+                enabled = mapType != MapType.SATELLITE
+            ) {
+                Text("Satélite")
+            }
+            Button(
+                onClick = { onMapTypeSelected(MapType.HYBRID) },
+                enabled = mapType != MapType.HYBRID
+            ) {
+                Text("Híbrido")
+            }
+            Button(
+                onClick = { onMapTypeSelected(MapType.TERRAIN) },
+                enabled = mapType != MapType.TERRAIN
+            ) {
+                Text("Terreno")
+            }
+        }
     }
 }
