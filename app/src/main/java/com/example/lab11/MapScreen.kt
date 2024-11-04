@@ -1,19 +1,17 @@
 package com.example.lab11
+
 import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -97,18 +95,7 @@ fun MapScreen() {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Botones para cambiar el tipo de mapa
-        MapTypeSelection(mapType = mapType) { selectedMapType ->
-            mapType = selectedMapType
-        }
-
-        // Botón para obtener la ubicación actual
-        val context = LocalContext.current
-        Button(onClick = { getCurrentLocation(context) }) {
-            Text("Obtener ubicación actual")
-        }
-
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = cameraPositionState,
@@ -167,38 +154,60 @@ fun MapScreen() {
                 }
             }
         }
+
+        // Contenedor para los botones
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp) // Espaciado entre botones
+        ) {
+            // Botón para obtener la ubicación actual
+            val context = LocalContext.current
+            Button(
+                onClick = { getCurrentLocation(context) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Obtener ubicación actual")
+            }
+
+            // Botones para cambiar el tipo de mapa
+            MapTypeSelection(mapType = mapType) { selectedMapType ->
+                mapType = selectedMapType
+            }
+        }
     }
 }
 
 @Composable
 fun MapTypeSelection(mapType: MapType, onMapTypeSelected: (MapType) -> Unit) {
-    Column {
-        Text("Selecciona el tipo de mapa:")
-        Row(horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button(
-                onClick = { onMapTypeSelected(MapType.NORMAL) },
-                enabled = mapType != MapType.NORMAL
-            ) {
-                Text("Normal")
-            }
-            Button(
-                onClick = { onMapTypeSelected(MapType.SATELLITE) },
-                enabled = mapType != MapType.SATELLITE
-            ) {
-                Text("Satélite")
-            }
-            Button(
-                onClick = { onMapTypeSelected(MapType.HYBRID) },
-                enabled = mapType != MapType.HYBRID
-            ) {
-                Text("Híbrido")
-            }
-            Button(
-                onClick = { onMapTypeSelected(MapType.TERRAIN) },
-                enabled = mapType != MapType.TERRAIN
-            ) {
-                Text("Terreno")
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Button(
+            onClick = { onMapTypeSelected(MapType.NORMAL) },
+            enabled = mapType != MapType.NORMAL
+        ) {
+            Text("Normal")
+        }
+        Button(
+            onClick = { onMapTypeSelected(MapType.SATELLITE) },
+            enabled = mapType != MapType.SATELLITE
+        ) {
+            Text("Satélite")
+        }
+        Button(
+            onClick = { onMapTypeSelected(MapType.HYBRID) },
+            enabled = mapType != MapType.HYBRID
+        ) {
+            Text("Híbrido")
+        }
+        Button(
+            onClick = { onMapTypeSelected(MapType.TERRAIN) },
+            enabled = mapType != MapType.TERRAIN
+        ) {
+            Text("Terreno")
         }
     }
 }
